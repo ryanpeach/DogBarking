@@ -4,7 +4,7 @@ import struct
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-def play_sound(volume=1., fs=44100, duration=2.0, f=17000):
+def play_sound(volume=1., fs=44100, duration=2.0, f=10000):
     """ https://stackoverflow.com/questions/8299303/generating-sine-wave-sound-in-python """
     p = pyaudio.PyAudio()
 
@@ -72,37 +72,49 @@ class Plotter():
 CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
-THRESH = .0001
 
-""" REF: https://gist.github.com/mabdrabo/8678538 """
-FORMAT = pyaudio.paInt16
+if __name__=="__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--thresh", type=float, default=.0001,
+                        help="The threshold for the sound when playing.")
+    parser.add_argument("-f", "--frequency", type=float, default=17000.,
+                        help="The frequency to play for the dog.")
+    parser.add_argument("-d", "--duration", type=float, default=2.,
+                        help="The duration to play the sound.")
+    args = parser.parse_args()
 
-audio = pyaudio.PyAudio()
+    THRESH = args.thresh
+    FREQ = args.frequency
+    DUR = args.duration
 
-# start Recording
-stream = audio.open(format=FORMAT, channels=CHANNELS,
-                    rate=RATE, input=True,
-                    frames_per_buffer=CHUNK)
+    """ REF: https://gist.github.com/mabdrabo/8678538 """
+    FORMAT = pyaudio.paInt16
 
-print("recording...")
+    audio = pyaudio.PyAudio()
 
-p = Plotter()
+    # start Recording
+    stream = audio.open(format=FORMAT, channels=CHANNELS,
+                        rate=RATE, input=True,
+                        frames_per_buffer=CHUNK)
 
-def update_line(i):
-    data = stream.read(CHUNK)
-    amp = get_rms(data)
-    p.update_data(amp)
-    if amp > THRESH:
-        play_sound()
-    print(p.y)
-    print(p.x)
-    p.update()
+    print("recording...")
 
-line_ani = animation.FuncAnimation(p.fig, update_line)
-plt.show()
-print("finished recording")
+    p = Plotter()
 
-# stop Recording
-stream.stop_stream()
-stream.close()
-audio.terminate()
+    def update_line(i):
+        data = stream.read(CHUNK)
+        amp = get_rms(data)
+        p.update_data(amp)
+        if amp > THRESH:
+            play_sound(duration=DUR, f=FREQ)
+        p.update()
+
+    line_ani = animation.FuncAnimation(p.fig, update_line)
+    plt.show()
+    print("finished recording")
+
+    # stop Recording
+    stream.stop_stream()
+    stream.close()
+    audio.terminate()
