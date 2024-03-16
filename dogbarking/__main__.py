@@ -27,7 +27,7 @@ def nogui(
     duration: Annotated[
         float,
         typer.Argument(help="The duration to play the sound in seconds.", min=0.0),
-    ] = 1.0,
+    ] = 5.0,
     sample_freq: Annotated[
         int, typer.Argument(help="The sample rate in Hz.", min=0)
     ] = 44100,
@@ -36,6 +36,8 @@ def nogui(
     ] = 0.1,
     # email: Annotated[Optional[str], "The email to send the alert to."]=None
 ):
+    print("Remember to turn your volume all the way up!")
+
     # Start Recording
     audio = pyaudio.PyAudio()
     p = Player(
