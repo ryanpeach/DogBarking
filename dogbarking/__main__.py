@@ -23,30 +23,30 @@ app = typer.Typer()
 @use_toml_config(default_value="config.toml")
 def nogui(
     volume: Annotated[
-        float, typer.Argument(help="The volume to play the sound at.", min=0.0, max=1.0)
+        float, typer.Option(help="The volume to play the sound at.", min=0.0, max=1.0)
     ] = 1.0,
     thresh: Annotated[
         float,
-        typer.Argument(help="The threshold to trigger the sound.", min=0.0, max=1.0),
+        typer.Option(help="The threshold to trigger the sound.", min=0.0, max=1.0),
     ] = 0.1,
     frequency: Annotated[
-        float, typer.Argument(help="The frequency of the sound to play.", min=0.0)
+        float, typer.Option(help="The frequency of the sound to play.", min=0.0)
     ] = 17000.0,
     duration: Annotated[
         float,
-        typer.Argument(help="The duration to play the sound in seconds.", min=0.0),
+        typer.Option(help="The duration to play the sound in seconds.", min=0.0),
     ] = 5.0,
     sample_freq: Annotated[
-        int, typer.Argument(help="The sample rate in Hz.", min=0)
+        int, typer.Option(help="The sample rate in Hz.", min=0)
     ] = 44100,
     keep_historical_seconds: Annotated[
-        int, typer.Argument(help="The number of seconds to save to audio.", min=0)
+        int, typer.Option(help="The number of seconds to save to audio.", min=0)
     ] = 10,
     seconds_per_buffer: Annotated[
-        float, typer.Argument(help="The number of seconds per buffer.", min=0.0)
+        float, typer.Option(help="The number of seconds per buffer.", min=0.0)
     ] = 0.1,
     save_path: Annotated[
-        Path, typer.Argument(help="The path to save the audio file to.")
+        Path, typer.Option(help="The path to save the audio file to.")
     ] = Path("./outputs"),
     sender_email: Annotated[
         Optional[str], typer.Option(help="The email to send the alert from.")
@@ -107,6 +107,9 @@ def nogui(
         raise typer.Abort()
 
     logger.warning("Remember to turn your volume all the way up!")
+    logger.warning(
+        "Remember to ensure your laptop is plugged in and set to never sleep!"
+    )
 
     # Send a start email
     if use_email:
@@ -115,6 +118,7 @@ def nogui(
         assert smtp_password is not None
         assert smtp_server is not None
         assert smtp_port is not None
+        logger.info("Sending start email...")
         Email(
             sender_email=sender_email,
             receiver_email=receiver_email,
@@ -144,6 +148,7 @@ def nogui(
 
     # If the rms of the waveform is greater than the threshold, play the sound
     rms_history = []
+    nb_events = 0
     for waveform in r:
         rms = get_rms(waveform)
         logger.debug(f"RMS: {rms}")
@@ -163,6 +168,7 @@ def nogui(
             assert smtp_password is not None
             assert smtp_server is not None
             assert smtp_port is not None
+            logger.info("Sending summary email...")
             Email(
                 sender_email=sender_email,
                 receiver_email=receiver_email,
@@ -170,14 +176,16 @@ def nogui(
                 smtp_server=smtp_server,
                 smtp_port=smtp_port,
                 summary=f"Dog Barking Summary Email {datetime.now()}",
-                body=f"Here are some RMS statistics about the dog barking:\n{pd.DataFrame(rms_history).describe()}",
+                body=f"Here are some statistics about the dog barking:\n{pd.DataFrame(rms_history, columns=['RMS']).describe()}\n\nThreshold: {thresh}\nNumber of Events: {nb_events}",
             ).send_email()
             r.start()
             rms_history = []
+            nb_events = 0
 
         # Handle thresholding
         if rms > thresh:
             logger.info(f"Dog Barking at {datetime.now()}")
+            nb_events += 1
 
             # Stop the recording, don't want to record the sound we are playing
             r.stop()
@@ -205,6 +213,8 @@ def nogui(
                     body=textwrap.dedent(
                         f"""\
                         Your dog was barking at {datetime.now().isoformat()}.
+                        RMS: {rms}
+                        Threshold: {thresh}
                         """
                     ),
                 ).send_email()

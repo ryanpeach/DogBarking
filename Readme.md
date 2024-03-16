@@ -2,7 +2,9 @@
 
 A simple for recording audio, and playing a frequency when the volume is over some threshold.
 
-This app has many uses, but is made originally for training a dog to stop barking. By playing a high pitched, loud sound whenever my computer detected high volume noise, I trained my dog to stop barking while i was gone.
+This app has many uses, but is made originally for training a dog to stop barking. By playing a high pitched, loud sound whenever my computer detected high volume noise, I trained my dog to stop barking while I was gone.
+
+It will also email you about events with recordings and summarize the events throughout the day.
 
 # Installation
 
@@ -22,7 +24,11 @@ pre-commit install
 
 # Usage
 
-> python3 -m dogbarking
+> ./run.sh
+
+**NOTE**: Only tapping CTRL+C *twice* will stop the app using this script.
+
+This will start the app and record audio from your default input device. When the volume is over the threshold, it will play a high pitched sound.
 
 # Email
 
