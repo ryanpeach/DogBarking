@@ -1,12 +1,14 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 from datetime import datetime
 import pyaudio
+from pydantic import SecretStr
 import toml
 import typer
 from typer_config import use_toml_config
 
 from dogbarking.audio import Player, Recorder
+from dogbarking.email import Email
 from dogbarking.math import get_rms
 from loguru import logger
 
@@ -14,7 +16,7 @@ app = typer.Typer()
 
 
 @app.command()
-@use_toml_config()
+@use_toml_config(default_value="config.toml")
 def nogui(
     volume: Annotated[
         float, typer.Argument(help="The volume to play the sound at.", min=0.0, max=1.0)
@@ -42,8 +44,43 @@ def nogui(
     save_path: Annotated[
         Path, typer.Argument(help="The path to save the audio file to.")
     ] = Path("./outputs"),
-    # email: Annotated[Optional[str], "The email to send the alert to."]=None
+    sender_email: Annotated[
+        Optional[str], typer.Option(help="The email to send the alert from.")
+    ] = None,
+    receiver_email: Annotated[
+        Optional[str], typer.Option(help="The email to send the alert to.")
+    ] = None,
+    smtp_password: Annotated[
+        Optional[str],
+        typer.Option(
+            help="The password for the email.", envvar="DOGBARKING_SMTP_PASSWORD"
+        ),
+    ] = None,
+    smtp_server: Annotated[
+        Optional[str],
+        typer.Option(
+            help="The SMTP server to send the email.", envvar="DOGBARKING_SMTP_SERVER"
+        ),
+    ] = None,
+    smtp_port: Annotated[
+        Optional[int],
+        typer.Option(
+            help="The SMTP port to send the email.", envvar="DOGBARKING_SMTP_PORT"
+        ),
+    ] = 465,
 ):
+    # Check that the email details are provided if any of them are provided
+    use_email = any(
+        [sender_email, receiver_email, smtp_password, smtp_server, smtp_port]
+    )
+    if use_email and not all(
+        [sender_email, receiver_email, smtp_password, smtp_server, smtp_port]
+    ):
+        logger.error(
+            "If you want to send an email, you need to provide all the details: sender_email, receiver_email, smtp_server, smtp_password, smtp_port"
+        )
+        raise typer.Abort()
+
     logger.warning("Remember to turn your volume all the way up!")
 
     # Start Recording
@@ -73,12 +110,26 @@ def nogui(
             # Stop the recording, don't want to record the sound we are playing
             r.stop()
 
-            # Save the recording
-            filename = save_path / f"{datetime.now().isoformat()}.mp3"
-            r.save(filename)
-
             # Play the sound
             p.play_sound()
+
+            # Save the recording and send the email
+            filepath = save_path / f"{datetime.now().isoformat()}.mp3"
+            r.save(filepath)
+            if use_email:
+                assert sender_email is not None
+                assert receiver_email is not None
+                assert smtp_password is not None
+                assert smtp_server is not None
+                assert smtp_port is not None
+                Email(
+                    sender_email=sender_email,
+                    receiver_email=receiver_email,
+                    attachment_filepath=filepath,
+                    smtp_password=SecretStr(smtp_password),
+                    smtp_server=smtp_server,
+                    smtp_port=smtp_port,
+                ).send_email()
 
             # Start recording again
             r.start()
