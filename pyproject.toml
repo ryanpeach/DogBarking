@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "dogbarking"
+version = "0.1.0"
+description = "Plays a sound when your dog is barking. Logs data and emails it to you."
+authors = ["Ryan Peach <rgpeach10@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+streamlit = "^1.32.2"
+typer = "^0.9.0"
+toml = "^0.10.2"
+pydantic = "^2.6.4"
+numpy = "^1.26.4"
+pyaudio = "^0.2.14"
+typer-config = "^1.4.0"
+ruff = "^0.3.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.3.0"
+mypy = "^1.9.0"
+pre-commit = "^3.6.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
