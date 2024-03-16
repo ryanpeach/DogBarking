@@ -1,23 +1,29 @@
+import functools
+from typing import Generator, Optional
 import pyaudio
 import numpy as np
+import numpy.typing as npt
+from pyaudio import Stream
+from pydantic import BaseModel, PrivateAttr
+import numpy
 
 # REF: https://gist.github.com/mabdrabo/8678538
 FORMAT = pyaudio.paFloat32
 
 
-class Recorder:
-    def __init__(self, audio, frames_per_buffer, form, channels, sample_freq):
-        self.audio = audio
-        self.device_index = self.find_input_device()
-        self.frames_per_buffer = frames_per_buffer
-        self.channels = channels
-        self.sample_freq = sample_freq
-        self.format = form
+class Recorder(BaseModel):
+    audio: pyaudio.PyAudio
+    frames_per_buffer: int
+    sample_freq: int
+    _stream: Optional[Stream] = PrivateAttr()
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def start(self):
-        self.stream = self.audio.open(
-            format=self.format,
-            channels=self.channels,
+        self._stream = self.audio.open(
+            format=FORMAT,
+            channels=1,
             rate=self.sample_freq,
             input=True,
             input_device_index=self.device_index,
@@ -25,67 +31,63 @@ class Recorder:
         )
 
     def stop(self):
-        self.stream.stop_stream()
-        self.stream.close()
+        self._stream.stop_stream()
+        self._stream.close()
 
-    def find_input_device(self) -> int:
-        device_index = None
+    @functools.cached_property
+    def device_index(self) -> int:
         for i in range(self.audio.get_device_count()):
             devinfo = self.audio.get_device_info_by_index(i)
             print("Device %d: %s" % (i, devinfo["name"]))
 
             for keyword in ["mic", "input"]:
-                if keyword in devinfo["name"].lower():
+                if keyword in str(devinfo["name"]).lower():
                     print("Found an input: device %d - %s" % (i, devinfo["name"]))
-                    device_index = i
-                    return device_index
+                    return i
 
-        if device_index is None:
-            print("No preferred input found; using default input device.")
+        raise Exception("No input device found.")
 
-        return device_index
+    def __iter__(self) -> Generator[npt.NDArray[np.float32], None, None]:  # type: ignore
+        while True:
+            yield self.get_buffer()
 
-    def __next__(self) -> np.ndarray:
+    def get_buffer(self) -> npt.NDArray[np.float32]:
         """REF: https://stackoverflow.com/questions/19629496/get-an-audio-sample-as-float-number-from-pyaudio-stream # noqa"""
-        import numpy
-
-        stream = self.stream.open(
-            format=FORMAT,
-            channels=self.channels,
-            rate=self.sample_freq,
-            input=True,
-            frames_per_buffer=self.frames_per_buffer,
-        )
-        data = stream.read(self.frames_per_buffer * self.sample_freq)
-        decoded = numpy.fromstring(data, "Float32")
+        data = self._stream.read(self.frames_per_buffer)
+        decoded = numpy.fromstring(data, np.float32)  # type: ignore
         return decoded
 
 
-class Player:
-    def __init__(self, audio, volume, duration, freq, fs, form):
-        self.audio = audio
-        self.duration = duration
-        self.freq = freq
-        self.fs = fs
-        self.volume = volume
-        self.format = form
+class Player(BaseModel):
+    audio: pyaudio.PyAudio
+    volume: float
+    duration: float
+    frequency: float
+    sample_freq: int
 
-    def start(self):
-        # for paFloat32 sample values must be in range [-1.0, 1.0]
-        self.stream = self.audio.open(
-            format=self.format, channels=1, rate=self.fs, output=True
+    class Config:
+        arbitrary_types_allowed = True
+
+    def play_sound(self) -> None:
+        """REF: https://stackoverflow.com/questions/8299303/generating-sine-wave-sound-in-python"""
+        stream = self.audio.open(
+            format=FORMAT, channels=1, rate=self.sample_freq, output=True
         )
 
-    def stop(self):
-        self.stream.stop_stream()
-        self.stream.close()
-
-    def play_sound(self):
-        """REF: https://stackoverflow.com/questions/8299303/generating-sine-wave-sound-in-python"""
         # generate samples, note conversion to float32 array
         samples = (
-            np.sin(2 * np.pi * np.arange(self.fs * self.duration) * self.freq / self.fs)
+            np.sin(
+                2
+                * np.pi
+                * np.arange(self.sample_freq * self.duration)
+                * self.frequency
+                / self.sample_freq
+            )
         ).astype(np.float32)
 
         # play. May repeat with different volume values (if done interactively)
-        self.stream.write(self.volume * samples)
+        stream.write(self.volume * samples)
+
+        # Close the stream
+        stream.stop_stream()
+        stream.close()

@@ -1527,6 +1527,28 @@ toml = ["toml (>=0.10.2,<0.11.0)"]
 yaml = ["pyyaml (>=6.0,<7.0)"]
 
 [[package]]
+name = "types-pyaudio"
+version = "0.2.16.20240106"
+description = "Typing stubs for pyaudio"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-pyaudio-0.2.16.20240106.tar.gz", hash = "sha256:7181798a9155e57a0fcb9dfa4fe3311a058b28dc93f5e0997270c1c9137f8217"},
+    {file = "types_pyaudio-0.2.16.20240106-py3-none-any.whl", hash = "sha256:adfcde598cb43224a15671dd086c311fab18a9f4d65c4932d652d891a810d115"},
+]
+
+[[package]]
+name = "types-toml"
+version = "0.10.8.20240310"
+description = "Typing stubs for toml"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-toml-0.10.8.20240310.tar.gz", hash = "sha256:3d41501302972436a6b8b239c850b26689657e25281b48ff0ec06345b8830331"},
+    {file = "types_toml-0.10.8.20240310-py3-none-any.whl", hash = "sha256:627b47775d25fa29977d9c70dc0cbab3f314f32c8d8d0c012f2ef5de7aaec05d"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.10.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -1629,4 +1651,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4847fdb790e9ca20d63c2c8cc70a73ce576bca92fdaf514c5c057f48bd78527d"
+content-hash = "02b7cb1cbdd4f142e115daaf95b98ec1a0514b57f9a5f234fb22fe22397b4ca6"

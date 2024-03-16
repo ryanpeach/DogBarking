@@ -12,26 +12,43 @@ app = typer.Typer()
 
 
 @app.command()
-@use_toml_config
+@use_toml_config()
 def nogui(
-    volume: Annotated[float, "The percentage volume, must be between 0 and 1."] = 1.0,
-    thresh: Annotated[float, "The threshold for the sound when playing."] = 0.0001,
-    frequency: Annotated[float, "The frequency to play for the dog."] = 17000.0,
-    duration: Annotated[float, "The duration to play the sound."] = 1.0,
-    sample_freq: Annotated[int, "The sample rate in Hz."] = 44100,
-    chunk: Annotated[int, "The number of frames per buffer."] = 10240,
-    channels: Annotated[int, "The number of audio channels."] = 1,
+    volume: Annotated[
+        float, typer.Argument(help="The volume to play the sound at.", min=0.0, max=1.0)
+    ] = 1.0,
+    thresh: Annotated[
+        float,
+        typer.Argument(help="The threshold to trigger the sound.", min=0.0, max=1.0),
+    ] = 0.1,
+    frequency: Annotated[
+        float, typer.Argument(help="The frequency of the sound to play.", min=0.0)
+    ] = 17000.0,
+    duration: Annotated[
+        float,
+        typer.Argument(help="The duration to play the sound in seconds.", min=0.0),
+    ] = 1.0,
+    sample_freq: Annotated[
+        int, typer.Argument(help="The sample rate in Hz.", min=0)
+    ] = 44100,
+    seconds_per_buffer: Annotated[
+        float, typer.Argument(help="The number of seconds per buffer.", min=0.0)
+    ] = 0.1,
     # email: Annotated[Optional[str], "The email to send the alert to."]=None
 ):
     # Start Recording
     audio = pyaudio.PyAudio()
-    p = Player(audio, volume=volume, duration=duration, freq=frequency, fs=sample_freq)
-    r = Recorder(
-        audio,
-        channels=channels,
+    p = Player(
+        audio=audio,
+        volume=volume,
+        duration=duration,
         sample_freq=sample_freq,
-        input=True,
-        frames_per_buffer=chunk,
+        frequency=frequency,
+    )
+    r = Recorder(
+        audio=audio,
+        sample_freq=sample_freq,
+        frames_per_buffer=sample_freq * seconds_per_buffer,
     )
     r.start()
 
@@ -40,10 +57,16 @@ def nogui(
         rms = get_rms(waveform)
         print(f"RMS: {rms}")
         if rms > thresh:
-            p.start()
-            p.play_sound()
-            p.stop()
             print(f"Dog Barking at {datetime.now()}")
+
+            # Stop the recording, don't want to record the sound we are playing
+            r.stop()
+
+            # Play the sound
+            p.play_sound()
+
+            # Start recording again
+            r.start()
 
 
 if __name__ == "__main__":
