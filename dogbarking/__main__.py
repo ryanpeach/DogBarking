@@ -1,7 +1,6 @@
 from pathlib import Path
 import textwrap
 import sys
-import textwrap
 from typing import Annotated, Optional
 from datetime import datetime
 import pyaudio
@@ -72,9 +71,6 @@ def nogui(
             help="The SMTP port to send the email.", envvar="DOGBARKING_SMTP_PORT"
         ),
     ] = 465,
-    summary_cron: Annotated[
-        str, typer.Option(help="The cron schedule to send a summary email.")
-    ] = "*/30 * * * *",
     log_level: Annotated[
         str,
         typer.Option(
