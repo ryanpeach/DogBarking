@@ -17,6 +17,7 @@ pyaudio = "^0.2.14"
 typer-config = "^1.4.0"
 ruff = "^0.3.3"
 loguru = "^0.7.2"
+soundfile = "^0.12.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.9.0"
@@ -31,3 +32,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 plugins = ["numpy.typing.mypy_plugin"]
+ignore_missing_imports = true
