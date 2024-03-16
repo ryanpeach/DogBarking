@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Annotated
 from datetime import datetime
 import pyaudio
@@ -32,9 +33,15 @@ def nogui(
     sample_freq: Annotated[
         int, typer.Argument(help="The sample rate in Hz.", min=0)
     ] = 44100,
+    keep_historical_seconds: Annotated[
+        int, typer.Argument(help="The number of seconds to save to audio.", min=0)
+    ] = 10,
     seconds_per_buffer: Annotated[
         float, typer.Argument(help="The number of seconds per buffer.", min=0.0)
     ] = 0.1,
+    save_path: Annotated[
+        Path, typer.Argument(help="The path to save the audio file to.")
+    ] = "./outputs",
     # email: Annotated[Optional[str], "The email to send the alert to."]=None
 ):
     logger.warning("Remember to turn your volume all the way up!")
@@ -50,6 +57,7 @@ def nogui(
     )
     r = Recorder(
         audio=audio,
+        keep_historical_buffers=int(keep_historical_seconds / seconds_per_buffer),
         sample_freq=sample_freq,
         frames_per_buffer=int(sample_freq * seconds_per_buffer),
     )
@@ -64,6 +72,10 @@ def nogui(
 
             # Stop the recording, don't want to record the sound we are playing
             r.stop()
+
+            # Save the recording
+            filename = save_path / f"{datetime.now().isoformat()}.mp3"
+            r.save(filename)
 
             # Play the sound
             p.play_sound()
