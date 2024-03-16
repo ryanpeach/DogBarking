@@ -1,5 +1,6 @@
 from pathlib import Path
-import textwrap
+from typing import Optional
+from croniter import croniter
 from pydantic import BaseModel, EmailStr, SecretStr
 import smtplib
 import ssl
@@ -11,13 +12,22 @@ from datetime import datetime
 from loguru import logger
 
 
+def match_cron(cron_string: str) -> bool:
+    """
+    Check if the current time matches the cron schedule.
+    """
+    return croniter.match(cron_string, datetime.now())
+
+
 class Email(BaseModel):
+    summary: str
+    body: str
     sender_email: EmailStr
     receiver_email: EmailStr
-    attachment_filepath: Path
     smtp_password: SecretStr
     smtp_server: str
     smtp_port: int = 465
+    attachment_filepath: Optional[Path] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -27,28 +37,26 @@ class Email(BaseModel):
         message = MIMEMultipart()
         message["From"] = self.sender_email
         message["To"] = self.receiver_email
-        message["Subject"] = f"Dog Barking Alert {datetime.now().isoformat()}"
-        body = textwrap.dedent(
-            f"""\
-        Your dog was barking at {datetime.now().isoformat()}.
-        """
-        )
+        message["Subject"] = self.summary
+        body = self.body
 
         # Add body to email
         message.attach(MIMEText(body, "plain"))
 
-        # Open PDF file in binary mode and attach
-        with self.attachment_filepath.open("rb") as attachment:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.read())
+        # Open file in binary mode and attach
+        if self.attachment_filepath is not None:
+            with self.attachment_filepath.open("rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
 
-        # Encode file in ASCII characters to send by email
-        encoders.encode_base64(part)
-        part.add_header(
-            "Content-Disposition",
-            f"attachment; filename= {str(self.attachment_filepath)}",
-        )
-        message.attach(part)
+            # Encode file in ASCII characters to send by email
+            encoders.encode_base64(part)
+
+            part.add_header(
+                "Content-Disposition",
+                f"attachment; filename= {str(self.attachment_filepath)}",
+            )
+            message.attach(part)
 
         return message
 
