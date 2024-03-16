@@ -10,6 +10,9 @@ This app has many uses, but is made originally for training a dog to stop barkin
 # If you are on macosx, be sure to do this, otherwise skip
 brew install portaudio
 
+# On ubuntu you might need to do
+sudo apt install portaudio19-dev
+
 # Then just install the requirements with poetry
 poetry install
 
