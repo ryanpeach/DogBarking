@@ -1637,6 +1637,17 @@ toml = ["toml (>=0.10.2,<0.11.0)"]
 yaml = ["pyyaml (>=6.0,<7.0)"]
 
 [[package]]
+name = "types-croniter"
+version = "2.0.0.20240106"
+description = "Typing stubs for croniter"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-croniter-2.0.0.20240106.tar.gz", hash = "sha256:a5c92566d750e025ab31279029ab44b479e2e3509cd8db3784574bdab1012571"},
+    {file = "types_croniter-2.0.0.20240106-py3-none-any.whl", hash = "sha256:266d9ecabbc06afab7cc0cfa7f2149eb36f613ed66ddd6c9bac4edcf727e9a58"},
+]
+
+[[package]]
 name = "types-pyaudio"
 version = "0.2.16.20240106"
 description = "Typing stubs for pyaudio"
@@ -1775,4 +1786,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "3033c504aa81982578b70698d1413dce6b7fda6d07b07895347e5f6e0c5d9de6"
+content-hash = "6dff8ff89aa51384083ebaa6c78df19f5a0e36d313059be7a00b0a720e831fae"
