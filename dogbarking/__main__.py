@@ -1,5 +1,6 @@
 from pathlib import Path
 import textwrap
+import sys
 from typing import Annotated, Optional
 from datetime import datetime
 import pyaudio
@@ -73,7 +74,22 @@ def nogui(
     summary_cron: Annotated[
         str, typer.Option(help="The cron schedule to send a summary email.")
     ] = "*/30 * * * *",
+    log_level: Annotated[
+        str,
+        typer.Option(
+            help="The logging level to use.",
+        ),
+    ] = "INFO",
 ):
+    """Dog Barking Alert System"""
+
+    # Set up the logger
+    logger.remove(0)
+    logger.add(
+        sys.stderr,
+        level=log_level,
+    )
+
     # Check that the email details are provided if any of them are provided
     use_email = any(
         [sender_email, receiver_email, smtp_password, smtp_server, smtp_port]
