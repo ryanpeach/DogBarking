@@ -1,6 +1,7 @@
 from pathlib import Path
 import textwrap
 import sys
+import textwrap
 from typing import Annotated, Optional
 from datetime import datetime
 import pyaudio
@@ -80,6 +81,9 @@ def nogui(
             help="The logging level to use.",
         ),
     ] = "INFO",
+    summary_cron: Annotated[
+        str, typer.Option(help="The cron schedule to send a summary email.")
+    ] = "*/30 * * * *",
 ):
     """Dog Barking Alert System"""
 
