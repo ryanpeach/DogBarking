@@ -50,7 +50,7 @@ def nogui(
     r = Recorder(
         audio=audio,
         sample_freq=sample_freq,
-        frames_per_buffer=sample_freq * seconds_per_buffer,
+        frames_per_buffer=int(sample_freq * seconds_per_buffer),
     )
     r.start()
 

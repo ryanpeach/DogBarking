@@ -53,6 +53,7 @@ class Recorder(BaseModel):
 
     def get_buffer(self) -> npt.NDArray[np.float32]:
         """REF: https://stackoverflow.com/questions/19629496/get-an-audio-sample-as-float-number-from-pyaudio-stream # noqa"""
+        assert self._stream is not None, "Stream is None. Forgot to call start()?"
         data = self._stream.read(self.frames_per_buffer)
         decoded = numpy.fromstring(data, np.float32)  # type: ignore
         return decoded
