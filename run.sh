@@ -10,7 +10,7 @@ while true; do
     if [ $rc -eq 0 ]; then
         exit 0
     else
-        echo "Restarting"
+        echo "Restarting. Press Ctrl+C (again) to exit"
         sleep 1
     fi
 done
