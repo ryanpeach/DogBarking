@@ -1,12 +1,14 @@
 # Dog Barking
 
-A simple for recording audio, and playing a frequency when the volume is over some threshold.
+A simple app for recording audio, and playing a frequency when the volume in the room is over some threshold.
 
-This app has many uses, but is made originally for training a dog to stop barking. By playing a high pitched, loud sound whenever my computer detected high volume noise, I trained my dog to stop barking while I was gone.
+This app has many uses, but is made originally for training a dog to stop barking. By playing a high pitched loud sound whenever my computer detected high volume noise, I trained my dog to stop barking while I was gone.
 
 It will also email you about events with recordings and summarize the events throughout the day.
 
 # Installation
+
+You'll want to start by installing python and [poetry](https://python-poetry.org/docs/#installation) on your system. Do this however you see fit.
 
 ```bash
 # If you are on macosx, be sure to do this, otherwise skip
