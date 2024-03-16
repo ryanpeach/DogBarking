@@ -16,13 +16,14 @@ numpy = "^1.26.4"
 pyaudio = "^0.2.14"
 typer-config = "^1.4.0"
 ruff = "^0.3.3"
+loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.3.0"
 mypy = "^1.9.0"
 pre-commit = "^3.6.2"
 types-pyaudio = "^0.2.16.20240106"
 types-toml = "^0.10.8.20240310"
+ruff = "^0.3.3"
 
 [build-system]
 requires = ["poetry-core"]

@@ -7,6 +7,7 @@ from typer_config import use_toml_config
 
 from dogbarking.audio import Player, Recorder
 from dogbarking.math import get_rms
+from loguru import logger
 
 app = typer.Typer()
 
@@ -36,7 +37,7 @@ def nogui(
     ] = 0.1,
     # email: Annotated[Optional[str], "The email to send the alert to."]=None
 ):
-    print("Remember to turn your volume all the way up!")
+    logger.warning("Remember to turn your volume all the way up!")
 
     # Start Recording
     audio = pyaudio.PyAudio()
@@ -57,9 +58,9 @@ def nogui(
     # If the rms of the waveform is greater than the threshold, play the sound
     for waveform in r:
         rms = get_rms(waveform)
-        print(f"RMS: {rms}")
+        logger.debug(f"RMS: {rms}")
         if rms > thresh:
-            print(f"Dog Barking at {datetime.now()}")
+            logger.info(f"Dog Barking at {datetime.now()}")
 
             # Stop the recording, don't want to record the sound we are playing
             r.stop()

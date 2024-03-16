@@ -23,4 +23,4 @@ jobs:
             poetry install
         - uses: chartboost/ruff-action@v1
         - name: mypy
-          run: mypy dogbarking
+          run: poetry run mypy dogbarking

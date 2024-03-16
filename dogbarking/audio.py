@@ -6,6 +6,7 @@ import numpy.typing as npt
 from pyaudio import Stream
 from pydantic import BaseModel, PrivateAttr
 import numpy
+from loguru import logger
 
 # REF: https://gist.github.com/mabdrabo/8678538
 FORMAT = pyaudio.paFloat32
@@ -38,11 +39,11 @@ class Recorder(BaseModel):
     def device_index(self) -> int:
         for i in range(self.audio.get_device_count()):
             devinfo = self.audio.get_device_info_by_index(i)
-            print("Device %d: %s" % (i, devinfo["name"]))
+            logger.info("Device %d: %s" % (i, devinfo["name"]))
 
             for keyword in ["mic", "input"]:
                 if keyword in str(devinfo["name"]).lower():
-                    print("Found an input: device %d - %s" % (i, devinfo["name"]))
+                    logger.info("Found an input: device %d - %s" % (i, devinfo["name"]))
                     return i
 
         raise Exception("No input device found.")
