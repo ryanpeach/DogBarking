@@ -83,6 +83,9 @@ def nogui(
 ):
     """Dog Barking Alert System"""
 
+    # Start time
+    start_time = datetime.now()
+
     # Set up the logger
     logger.remove(0)
     logger.add(
@@ -121,7 +124,7 @@ def nogui(
             smtp_password=SecretStr(smtp_password),
             smtp_server=smtp_server,
             smtp_port=smtp_port,
-            summary=f"Dog Barking App Starting {datetime.now()}",
+            summary=f"Dog Barking App Starting {start_time}",
             body="The dog barking detection has started.",
         ).send_email()
 
@@ -190,7 +193,7 @@ def nogui(
             p.play_sound()
 
             # Save the recording and send the email
-            filepath = save_path / f"{datetime.now().isoformat()}.mp3"
+            filepath = save_path / str(start_time) / f"{datetime.now().isoformat()}.mp3"
             r.save(filepath)
             if use_email:
                 assert sender_email is not None
