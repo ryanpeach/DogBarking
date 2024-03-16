@@ -57,7 +57,9 @@ class Recorder(BaseModel):
     def __iter__(self) -> Generator[npt.NDArray[np.float32], None, None]:  # type: ignore
         while True:
             out = self.get_buffer()
-            if len(self._waveform) > self.keep_historical_buffers:
+            if self._waveform is None:
+                self._waveform = []
+            elif len(self._waveform) > self.keep_historical_buffers:
                 self._waveform.pop(0)
             self._waveform.append(out)
             yield out
@@ -75,6 +77,10 @@ class Recorder(BaseModel):
         directory = filepath.parent
         if not directory.exists():
             os.makedirs(directory)
+
+        if self._waveform is None:
+            logger.error("No waveform to save.")
+            return
 
         waveform = np.concatenate(self._waveform)
         sf.write(filepath, waveform, self.sample_freq)

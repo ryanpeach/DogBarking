@@ -41,7 +41,7 @@ def nogui(
     ] = 0.1,
     save_path: Annotated[
         Path, typer.Argument(help="The path to save the audio file to.")
-    ] = "./outputs",
+    ] = Path("./outputs"),
     # email: Annotated[Optional[str], "The email to send the alert to."]=None
 ):
     logger.warning("Remember to turn your volume all the way up!")
