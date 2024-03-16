@@ -1,4 +1,5 @@
 from pathlib import Path
+import textwrap
 from typing import Annotated, Optional
 from datetime import datetime
 import pyaudio
@@ -8,8 +9,9 @@ import typer
 from typer_config import use_toml_config
 
 from dogbarking.audio import Player, Recorder
-from dogbarking.email import Email
+from dogbarking.email import Email, match_cron
 from dogbarking.math import get_rms
+import pandas as pd
 from loguru import logger
 
 app = typer.Typer()
@@ -68,6 +70,9 @@ def nogui(
             help="The SMTP port to send the email.", envvar="DOGBARKING_SMTP_PORT"
         ),
     ] = 465,
+    summary_cron: Annotated[
+        str, typer.Option(help="The cron schedule to send a summary email.")
+    ] = "*/30 * * * *",
 ):
     # Check that the email details are provided if any of them are provided
     use_email = any(
@@ -82,6 +87,23 @@ def nogui(
         raise typer.Abort()
 
     logger.warning("Remember to turn your volume all the way up!")
+
+    # Send a start email
+    if use_email:
+        assert sender_email is not None
+        assert receiver_email is not None
+        assert smtp_password is not None
+        assert smtp_server is not None
+        assert smtp_port is not None
+        Email(
+            sender_email=sender_email,
+            receiver_email=receiver_email,
+            smtp_password=SecretStr(smtp_password),
+            smtp_server=smtp_server,
+            smtp_port=smtp_port,
+            summary=f"Dog Barking App Starting {datetime.now()}",
+            body="The dog barking detection has started.",
+        ).send_email()
 
     # Start Recording
     audio = pyaudio.PyAudio()
@@ -101,9 +123,39 @@ def nogui(
     r.start()
 
     # If the rms of the waveform is greater than the threshold, play the sound
+    rms_history = []
     for waveform in r:
         rms = get_rms(waveform)
         logger.debug(f"RMS: {rms}")
+        rms_history.append(rms)
+
+        # Handle summary email
+        # Do not track seconds
+        if (
+            match_cron(summary_cron)
+            and use_email
+            and len(rms_history) > 0
+            and len(rms_history) % (int(1 / seconds_per_buffer) * 60) == 0
+        ):
+            r.stop()
+            assert sender_email is not None
+            assert receiver_email is not None
+            assert smtp_password is not None
+            assert smtp_server is not None
+            assert smtp_port is not None
+            Email(
+                sender_email=sender_email,
+                receiver_email=receiver_email,
+                smtp_password=SecretStr(smtp_password),
+                smtp_server=smtp_server,
+                smtp_port=smtp_port,
+                summary=f"Dog Barking Summary Email {datetime.now()}",
+                body=f"Here are some RMS statistics about the dog barking:\n{pd.DataFrame(rms_history).describe()}",
+            ).send_email()
+            r.start()
+            rms_history = []
+
+        # Handle thresholding
         if rms > thresh:
             logger.info(f"Dog Barking at {datetime.now()}")
 
@@ -129,6 +181,12 @@ def nogui(
                     smtp_password=SecretStr(smtp_password),
                     smtp_server=smtp_server,
                     smtp_port=smtp_port,
+                    summary=f"Dog Barking Alert {datetime.now().isoformat()}",
+                    body=textwrap.dedent(
+                        f"""\
+                        Your dog was barking at {datetime.now().isoformat()}.
+                        """
+                    ),
                 ).send_email()
 
             # Start recording again

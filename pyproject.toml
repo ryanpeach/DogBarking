@@ -18,6 +18,7 @@ typer-config = "^1.4.0"
 ruff = "^0.3.3"
 loguru = "^0.7.2"
 soundfile = "^0.12.1"
+croniter = "^2.0.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.9.0"
