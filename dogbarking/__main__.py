@@ -1,3 +1,4 @@
+import sys
 from typing import Annotated
 from datetime import datetime
 import pyaudio
@@ -9,6 +10,7 @@ from dogbarking.audio import Player, Recorder
 from dogbarking.math import get_rms
 from loguru import logger
 
+logger.add(sys.stderr, level="DEBUG")
 app = typer.Typer()
 
 
@@ -35,8 +37,15 @@ def nogui(
     seconds_per_buffer: Annotated[
         float, typer.Argument(help="The number of seconds per buffer.", min=0.0)
     ] = 0.1,
+    log_file: Annotated[
+        str, typer.Option(help="The file to log to if you want to save events.")
+    ] = None,
     # email: Annotated[Optional[str], "The email to send the alert to."]=None
 ):
+    if log_file:
+        logger.add(log_file, level="INFO", colorize=False)
+        logger.info(f"Logging to {log_file}")
+
     logger.warning("Remember to turn your volume all the way up!")
 
     # Start Recording
