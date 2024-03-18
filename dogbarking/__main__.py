@@ -118,6 +118,7 @@ def nogui(
         assert smtp_server is not None
         assert smtp_port is not None
         logger.info("Sending start email...")
+        logger.warning("Do not leave unatennded until you receive the start email.")
         Email(
             sender_email=sender_email,
             receiver_email=receiver_email,
@@ -144,6 +145,7 @@ def nogui(
         frames_per_buffer=int(sample_freq * seconds_per_buffer),
     )
     r.start()
+    logger.info("Recording started! You may now leave the room!")
 
     # If the rms of the waveform is greater than the threshold, play the sound
     rms_history = []
